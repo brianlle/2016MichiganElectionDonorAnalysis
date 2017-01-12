@@ -1,0 +1,19 @@
+The dataset was obtained from the Federal Election Commission (FEC).
+
+http://fec.gov/disclosurep/pnational.do
+http://fec.gov/disclosurep/PDownload.do
+ftp://ftp.fec.gov/FEC/Presidential_Map/2016/P00000001/P00000001-MI.zip
+
+These sites were used to find the expected victor and the actual victor of the 2016 general election for United States president in the state of Michigan.
+
+https://projects.fivethirtyeight.com/2016-election-forecast/
+http://projects.fivethirtyeight.com/2016-election-forecast/michigan/
+http://www.cnn.com/election/results/president
+http://www.cnn.com/election/results/states/michigan#president
+https://en.wikipedia.org/wiki/United_States_presidential_election,_2016
+
+These sites were used to find donation limits and suggested donations.
+
+http://www.fec.gov/pages/brochures/citizens.shtml <-- $2700 donation limit
+https://secure.gop.com/donate <-- 50, 100, 250, 500, 1000, 2700
+https://my.democrats.org/page/contribute/help-democrats-fight-back <-- 250, 1000, 2000, other
