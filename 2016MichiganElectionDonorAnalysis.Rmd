@@ -6,7 +6,11 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(warning=FALSE, message=FALSE)
 ```
 
 The 2016 United States presidential election was one of fascinating interest to the entire world. Most of the major polls, such as FiveThirtyEight <https://projects.fivethirtyeight.com/2016-election-forecast/>, predicted a victory by Hillary Clinton, with Donald Trump's eventual victory surprising the world. A majority of the so-called "battleground states" were predicted to send their electoral votes to Clinton, but as the results came in, they were won by Trump by narrow margins <http://www.cnn.com/election/results/president>. In particular, FiveThirtyEight projected a 78.9% chance of victory for Clinton in the state of Michigan <https://projects.fivethirtyeight.com/2016-election-forecast/michigan/>, where Trump eventually won by ~11700 votes, or a 0.3% margin <http://www.cnn.com/election/results/states/michigan#president>. Similar scenarios played out in other states, including Wisconsin and Pennsylvania.
@@ -30,28 +34,49 @@ library(ggplot2)
 
 qplot(x=contb_receipt_dt, data=donors, binwidth = 30, 
       color = I('black'), fill = I('#00FF00'),
-      xlab = 'Donation Date', ylab = 'Count', main = 'Number of Contributions by Date',
+      xlab = 'Donation Date', ylab = 'Count',
+      main = 'Number of Contributions by Date',
       )
 ```
+
 Donations ramp up towards the end of the election cycle (November 8, 2016).
 
-Where do donations? We can count the number of donations per city.
+Where do donations come from? We can check the cities with the greatest number of donations in this election cycle.
 
 ```{r echo=FALSE}
-table(donors$contbr_city)
+head(sort(table(donors$contbr_city), decreasing = TRUE), 5)
 ```
-Donations are also categorized by the election (election_tp), which are the primaries and the general election.
+
+These are some of the most populous cities in Michigan, so it makes sense that they also have larger numbers of donations. Donations are also categorized by the election (election_tp), which are the primaries and the general election.
 
 ```{r echo=FALSE}
 table(donors$election_tp)
 ```
 
-In the above table, we see that donations were marked as for the primaries (P2016), for the general election (G2016), for a 2015 primary (P2015) and for the 2020 primary (P2020). 492 were also uncategorized. There was no 2015 primary, so that's likely a miscategorization, and whoever donated to the 2020 primary was 4 years early!
+In the above table, we see that donations were marked as for the primaries (P2016), for the general election (G2016), for a 2015 primary (P2015) and for the 2020 primary (P2020). 492 were also uncategorized. 
+
+```{r}
+qplot(x=election_tp, data=donors, 
+      color = I('black'), fill = I('#00FF00'),
+      xlab = 'Election Code', ylab = 'Count',
+      main = 'Number of Contributions by Election',
+      )
+```
+
+There were about twice as many donations for the primaries than for the general election. We also note that there was no 2015 primary, so that's likely a miscategorization, and whoever donated to the 2020 primary was 4 years early!
 
 We can take a cursory look at this data to review how many donations each candidate received over the course of the 2016 elections (both primaries and general election).
 
 ```{r echo=FALSE}
 table(donors$cand_nm)
+```
+
+```{r}
+qplot(x=cand_nm, data=donors,
+      color = I('black'), fill = I('#00FF00'),
+      xlab = 'Candidate Name', ylab = 'Contribution Count',
+      main = 'Number of Contributions by Candidate',
+      )
 ```
 
 The dataset does not include either political affiliation or gender of the candidates, but we can update that manually using information available from Wikipedia <https://en.wikipedia.org/wiki/United_States_presidential_election,_2016>.
@@ -119,7 +144,9 @@ Tables are useful, but plots are a nice visual aid, so let's stack these counts 
 library(ggplot2)
 qplot(x=cand_party, data=donors)
 ```
+
 We can also look at donation by party for just the general election.
+
 ```{r}
 table(donors[donors$election_tp == "G2016",]$cand_party)
 ```
@@ -127,26 +154,34 @@ table(donors[donors$election_tp == "G2016",]$cand_party)
 ```{r echo=FALSE}
 qplot(x=cand_party, data=donors[donors$election_tp == "G2016",])
 ```
-What about contributions by candidate gender for the primaries and the general election?
+
+We can also explore relationships between these variables. What about contributions by candidate gender for the primaries and the general election?
+
 ```{r echo=FALSE}
 library(gridExtra)
-p1 <- qplot(x = cand_gender, data = donors[donors$election_tp == "P2016",], main = "Primaries", ylim = c(0,100000))
-p2 <- qplot(x = cand_gender, data = donors[donors$election_tp == "G2016",], main = "General Election", ylim = c(0, 100000))
+p1 <- qplot(x = cand_gender, data = donors[donors$election_tp == "P2016",],
+            main = "Primaries", ylim = c(0,100000))
+p2 <- qplot(x = cand_gender, data = donors[donors$election_tp == "G2016",],
+            main = "General Election", ylim = c(0, 100000))
 
 grid.arrange(p1, p2, ncol = 2)
 ```
+
 The primaries distribution makes sense given the context that there were many more male candidates in both major primaries (Republican and Democratic) than there were female candidates. The general election distribution is more surprising given the even split of major nominees: 1 major party female (Clinton), 1 minor party female (Stein), 1 major party male (Trump), and 1 minor party male (Johnson).
 
 What does a histogram of donation amounts look like?
+
 ```{r echo=FALSE}
 qplot(x = contb_receipt_amt, data = donors, binwidth = 1000)
 ```
+
 Most donations fit in that bin around $0, but some are negative, which are returned donations. What about donations to only female candidates?
 
 ```{r echo=FALSE}
 qplot(x=contb_receipt_amt, data=subset(donors, cand_gender == 'Female'),
       binwidth = 500, xlim = c(0, 11000), ylim = c(0,1000))
 ```
+
 We can also look at how much total money each candidate raised over this election cycle. Since there are so many candidates, this is probably more useful in table format for now.
 
 ```{r echo=FALSE}
@@ -160,13 +195,32 @@ qplot(x = cand_gender, y = contb_receipt_amt,
       data = subset(donors, contb_receipt_amt > 0), geom = 'boxplot') +
   coord_cartesian(ylim = c(0,100))
 ```
-Individual donations to male candidates appear to have been slightly higher than donations to female candidates.
+
+Individual donations to male candidates appear to have been slightly higher than donations to female candidates. We can perform a two sample t-test to see if there's a significant difference between the two populations using the following hypotheses:
+
+Null hypothesis: there is no difference in donation amounts for either gender.
+Alternative hypothesis: there is a difference in donation amounts to males vs. to females.
+
+```{r}
+t.test(subset(
+       subset(donors, contb_receipt_amt > 0),
+              cand_gender == 'Female')$contb_receipt_amt,
+       subset(
+       subset(donors, contb_receipt_amt > 0),
+              cand_gender == 'Male')$contb_receipt_amt,
+       )
+```
+
+With a p-value smaller than 2.084e-11, we reject the null hypothesis at the alpha = 0.05 level and accept the alternative hypothesis that there is a statistically significant difference between the two populations. That is, donation amounts to male candidates were significantly different from donation amounts to female candidates.
+
 
 ```{r echo=FALSE}
 qplot(x = cand_gender, y = contb_receipt_amt,
-      data = subset(donors, (contb_receipt_amt > 0)&(election_tp == "G2016")), geom = 'boxplot') +
+      data = subset(donors, (contb_receipt_amt > 0)&(election_tp == "G2016")),
+      geom = 'boxplot') +
   coord_cartesian(ylim = c(0,300))
 ```
+
 If we look at the same boxplots for only the general election, we see that donations to male candidates were much higher than donations to female candidates.
 
 We can take a cursory look at the boxplot statistics, as well.
@@ -179,15 +233,17 @@ Note that in the general election, the main candidates still running in Michigan
 
 ```{r echo=FALSE}
 genDonors = subset(donors, (contb_receipt_amt > 0)&(election_tp == "G2016"))
+genDonors$cand_nm <- factor(genDonors$cand_nm)
 by(genDonors$contb_receipt_amt, genDonors$cand_nm, sum)
 ```
 
 How many donors were there total? And how many repeat donors?
 
 ```{r echo=FALSE}
-sum(table(donors$contbr_nm)>0) #total unique donors, assuming 2 ppl dont have the same name
+sum(table(donors$contbr_nm)>0) #total unique donors, assuming no repeat names
 sum(table(donors$contbr_nm)>1) #repeat donors
 ```
+
 Let's look at donations as a function of amount vs. donation date. We'll look at donation date as days until the general election, plotting that number as a negative for plotting convenience (e.g. -100 corresponds to 100 days until the general election on November 8, 2016).
 
 ```{r echo=FALSE}
@@ -197,17 +253,22 @@ qplot(x = days_until_general_election, y = contb_receipt_amt, data = donors)
 What about looking at only general election donations and in the period of time between the end of the primaries (here we use July 29, 2016, the day after the end of the Democratic National Convention) and the general election date (November 8, 2016), which was 102 days.
 
 ```{r echo=FALSE}
-qplot(x = days_until_general_election, y = contb_receipt_amt, data = genDonors, xlim = c(-102,0))
+qplot(x = days_until_general_election, y = contb_receipt_amt, data = genDonors,
+      xlim = c(-102,0))
 ```
 
 This looks promising; let's remake the plot but weight the data points so we can see concentrations of donation amounts/dates.
 
 ```{r echo=FALSE}
-ggplot(aes(x = days_until_general_election, y = contb_receipt_amt), data = genDonors) + geom_point(alpha=1/5) +
-  scale_x_continuous(limits = c(-102,0)) + scale_y_continuous(limits = c(0, 5500))
+ggplot(aes(x = days_until_general_election, y = contb_receipt_amt),
+       data = genDonors) +
+  geom_point(alpha=1/5) +
+  scale_x_continuous(limits = c(-102,0)) +
+  scale_y_continuous(limits = c(0, 5500)) +
+  geom_smooth(method = 'lm')
 ```
 
-Interestingly, we see some trends emerge, such as the prevalence of small donations and the existence of horizontal lines in the plot.
+Interestingly, we see some trends emerge, such as the prevalence of small donations and the existence of horizontal lines in the plot. The overlaid blue line is obtained via linear regression and shows that the donation trend is approximately constant through the election cycle.
 
 For donations to male and female candidates, what are the mean and median contributions and how many were there?
 
@@ -267,47 +328,46 @@ donors.by_date <- arrange(donors.by_date, days_until_general_election)
 Let's take a look at the median donation per day for the entire election season.
 
 ```{r echo=FALSE}
-ggplot(aes(x = days_until_general_election, y = grouped_median), data = donors.by_date) +
+ggplot(aes(x = days_until_general_election, y = grouped_median),
+       data = donors.by_date) +
   geom_point(alpha=1)
 ```
 
 
 ```{r echo=FALSE}
-ggplot(aes(x = days_until_general_election, y = contb_receipt_amt), data = donors) + 
+ggplot(aes(x = days_until_general_election, y = contb_receipt_amt),
+       data = donors) + 
   geom_line(stat = 'summary', fun.y = median)
 ```
 
 We can also look at the total donations per day.
 
 ```{r echo=FALSE}
-ggplot(aes(x = contb_receipt_dt, y = contb_receipt_amt), data = donors) + 
+ggplot(aes(x = days_until_general_election, y = contb_receipt_amt), data = donors) + 
   geom_line(stat = 'summary', fun.y = sum)
 ```
 
-And the mean donation per day per candidate!
+We've looked at the total donation amount per day. What if we break it up to total donation amount per day for each political party?
 
 ```{r echo=FALSE}
-ggplot(aes(x = days_until_general_election, y = contb_receipt_amt), data = donors) + 
-  geom_line(aes(color = cand_nm), stat = 'summary', fun.y = mean)
+ggplot(aes(x = days_until_general_election, y = contb_receipt_amt),
+       data = donors) + 
+  geom_line(aes(color = cand_party), stat = 'summary', fun.y = sum) +
+  scale_y_continuous(limits = c (0, 15000))
 ```
 
-Maybe not as useful given how many candidates are included. What about per political party?
+It certainly looks like the Deomcratic and Republican parties lead in daily donations raised compared to the Green party, the Libertarian party, and independents. Let's narrow down our dataset to donations to the two major candidates of this election cycle: Hillary Clinton and Donald Trump.
 
 ```{r echo=FALSE}
-ggplot(aes(x = days_until_general_election, y = contb_receipt_amt), data = donors) + 
-  geom_line(aes(color = cand_party), stat = 'summary', fun.y = sum)
-```
-
-Still cluttered. Let's narrow down our dataset to donations to the two major candidates of this election cycle: Hillary Clinton and Donald Trump.
-
-```{r echo=FALSE}
-majorParty = subset(genDonors, cand_nm == 'Clinton, Hillary Rodham' | cand_nm ==  'Trump, Donald J.')
+majorParty = subset(genDonors, cand_nm == 'Clinton, Hillary Rodham' |
+                      cand_nm ==  'Trump, Donald J.')
 ```
 
 ```{r echo=FALSE}
 majorParty$cand_nm = factor(majorParty$cand_nm)
 table(majorParty$cand_nm)
 ```
+
 Hillary Clinton received 43605 total donations for the general election while Donald Trump received 7826. We can look at a summary of this subset of data.
 
 ```{r echo=FALSE}
@@ -326,14 +386,15 @@ summarise(grouped,
 Below is plotted the total donations amounts per day received by each candidate.
 
 ```{r echo=FALSE}
-ggplot(aes(x = days_until_general_election, y = contb_receipt_amt), data = majorParty) + 
+ggplot(aes(x = days_until_general_election, y = contb_receipt_amt),
+       data = majorParty) + 
   geom_line(aes(color = cand_nm), stat = 'summary', fun.y = sum) +
   scale_x_continuous(limits = c(-102,0))
 ```
 
 ```{r echo=FALSE}
 ggplot(aes(x = days_until_general_election), data = majorParty) + 
-  geom_histogram(aes(color = cand_nm)) +
+  geom_histogram(aes(fill = cand_nm)) +
   scale_x_continuous(limits = c(-102,0))
 ```
 
@@ -342,11 +403,13 @@ ggplot(aes(x = days_until_general_election), data = majorParty) +
   geom_density(aes(color = cand_nm)) +
   scale_x_continuous(limits = c(-102,0))
 ```
+
 We can see that Clinton received an uptick in donations closing in our election day, whereas Trump had a large surge after the conclusion of the Democratic primary but had faltering donation amounts towards the general election.
 
 Below is plotted the median donation per day for each candidate.
 ```{r echo=FALSE}
-ggplot(aes(x = days_until_general_election, y = contb_receipt_amt), data = majorParty) + 
+ggplot(aes(x = days_until_general_election, y = contb_receipt_amt),
+       data = majorParty) + 
   geom_line(aes(color = cand_nm), stat = 'summary', fun.y = median) +
   scale_x_continuous(limits = c(-102,0))
 ```
@@ -356,16 +419,20 @@ Donations to Trump tended to be in higher amounts than donations to Clinton.
 ## Final Plots and Summary
 
 ```{r echo=FALSE}
-ggplot(aes(x = days_until_general_election, y = contb_receipt_amt), data = genDonors) + geom_point(alpha=1/5) +
-  scale_x_continuous(limits = c(-102,0)) + scale_y_continuous(limits = c(0, 5500)) +
+ggplot(aes(x = days_until_general_election, y = contb_receipt_amt),
+       data = genDonors) + geom_point(alpha=1/5) +
+  scale_x_continuous(limits = c(-102,0)) +
+  scale_y_continuous(limits = c(0, 5500)) +
   xlab('Days to General Election (Days)') +
   ylab('Donation Amount (Dollars)') +
   ggtitle('Contributions During 2016 General Election')
 ```
+
 This scatterplot of contributions to political candidates during the general 2016 United States presidential election shows that the majority of donations were relativel small (<\$500). Horizontal lines can be observed at specific donation amounts, including \$500, \$1000, and \$2700. We can contextualize this information by looking at both suggested donation amounts and the maximum contribution amount. The Federal Election Commission states that the maximum political contribution made per individual per year is \$2700 (http://www.fec.gov/pages/brochures/citizens.shtml), while the donation pages for the Republican Party (https://secure.gop.com/donate) and Democratic Party (https://my.democrats.org/page/contribute/help-democrats-fight-back) have suggested donation amounts of \$500 and \$1000 among others. These suggested donation amounts seemed to take hold in donor's minds. (Note that donations over the FEC limit of \$2700 result in "negative" donations, or refunded donations.)
 
 ```{r echo=FALSE}
-qplot(x = cand_nm, y = contb_receipt_amt, main = 'Contributions to Major Candidates',
+qplot(x = cand_nm, y = contb_receipt_amt,
+      main = 'Contributions to Major Candidates',
       xlab = 'Candidate', ylab = 'Donation Amount (Dollars)',
       data = subset(majorParty, contb_receipt_amt > 0), geom = 'boxplot') +
   coord_cartesian(ylim = c(0,300))
@@ -373,9 +440,29 @@ qplot(x = cand_nm, y = contb_receipt_amt, main = 'Contributions to Major Candida
 
 Here, we use side-by-side boxplots of donations to Clinton and Trump to reveal some interesting trends. For Clinton, over 75% of donations were under \$100. For Trump, donation amounts varied greatly, with half of the contributions between \$50 and \$250. Notably, the median donation was higher for Trump than for Clinton, and the same is true for the 1st and 3rd quartiles. The willingness to contribute higher amounts of money to Trump than to Clinton may be indicative of stronger feelings or preferences for a political candidate.
 
+We can again perform a t-test in order to see if the differences in donation amounts are statistically significant with the following hypotheses:
+
+Null hypothesis: there is no difference in sizes of donations made to either Hillary Clinton or Donald Trump.
+Alternative hypothesis: there is a difference in sizes of donations made to Hillary Clinton vs. to Donald Trump.
+
+```{r}
+t.test(subset(
+       subset(majorParty, contb_receipt_amt > 0),
+              cand_nm == 'Clinton, Hillary Rodham')$contb_receipt_amt,
+       subset(
+       subset(majorParty, contb_receipt_amt > 0),
+              cand_nm == 'Trump, Donald J.')$contb_receipt_amt,
+       )
+```
+
+With a p-value smaller than 2.2e-16, we reject the null hypothesis at the alpha = 0.05 level and find that there is a statistically significant difference in the sizes of donations made to Clinton vs. Trump.
+
 ```{r echo=FALSE}
-ggplot(aes(x = days_until_general_election, y = contb_receipt_amt), data = majorParty) + 
-  geom_line(aes(color = cand_nm), stat = 'summary', fun.y = sum) +
+majorParty$Candidate <- majorParty$cand_nm
+
+ggplot(aes(x = days_until_general_election, y = contb_receipt_amt),
+       data = majorParty) + 
+  geom_line(aes(color = Candidate), stat = 'summary', fun.y = sum) +
   scale_x_continuous(limits = c(-102,0)) +
   xlab('Days to General Election (Days)') +
   ylab('Donations (Dollars)') +
