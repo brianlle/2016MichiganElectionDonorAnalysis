@@ -1,3 +1,3 @@
 # 2016MichiganElectionDonorAnalysis
 
-Using R, I performed exploratory data analysis of the donation records in Michigan for the 2016 United States presidential election. I searched for trends from the donation data that would match the reality of the election, which was the projected victory of Clinton in the state and the eventual narrow win by Trump.
+Using R, I performed exploratory data analysis of the donation records in Michigan for the 2016 United States presidential election. I searched for trends from the donation data that would match the reality of the election, which was the projected victory of Clinton in the state and the eventual narrow win by Trump. Interestingly enough, the opposite conclusion appeared in the data: as the general election date neared, the daily number of donations swung in Clinton's favor. However, individual donations to Trump were significantly higher in dollar amount than individual donations to Clinton.
